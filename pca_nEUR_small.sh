@@ -20,4 +20,4 @@ $fraposa --dim_ref 4 --method ap kgn_nEUR ukb_small
 $predpopu kgn_nEUR ukb_small
 paste <( cut -f1 ukb_small.popu ) <( cut -f2- ukb_small.pcs ) > tmp
 mv tmp ukb_small.pcs
-Rscript $home/plot.R kgn_nEUR ukb_small
+Rscript $home/pca_nEUR_small.R kgn_nEUR ukb_small
