@@ -12,6 +12,7 @@ col.ref = as.integer(x.ref$fid) + 1
 pch.stu = as.integer(x.stu$fid) + 1
 
 out.filename = paste0(pref.stu, ".png")
+print(paste("Plot saved to", out.filename))
 png(out.filename, 2000, 1000)
 par(mfrow=c(1,2), cex=2)
 plot(x.ref$PC1, x.ref$PC2, col=col.ref)
