@@ -6,7 +6,6 @@ refpref=$2
 stupref=$3
 home=`pwd`
 seed=123
-small_n=500
 fraposa="python $HOME/fraposa/fraposa_runner.py"
 predpopu="python $HOME/fraposa/predstupopu.py"
 trace="bash $HOME/fraposa_simulation/trace.sh"
