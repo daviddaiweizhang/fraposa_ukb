@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+date
+
 echo $SLURM_ARRAY_JOB_ID
 echo $SLURM_ARRAY_TASK_ID
 
@@ -26,3 +28,5 @@ $splitindiv ${inpref} $n $i $stupref
 for method in $methods; do
     $fraposa --method $method --dim_ref $dim_ref --dim_spikes $dim_spikes --out ${stupref}_$method $refpref $stupref
 done
+
+date
