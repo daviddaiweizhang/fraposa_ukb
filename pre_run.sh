@@ -5,7 +5,8 @@ root=data
 home=`pwd`
 mkdir -p $root
 
-# bash intersect.sh $root
+bash intersect.sh $root
 bash pre_pca_global_all.sh $root
-# bash pre_pca_EUR_oadpEUR.sh $root
-# bash pca_nEUR_small.sh $root $home
+bash pre_pca_EUR_oadpEUR.sh $root
+bash pca_nEUR_small.sh $root $home
+bash pca_EUR_oadpEURsmall.sh $root $home
