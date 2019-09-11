@@ -18,6 +18,4 @@ for method in $methods; do
 done
 
 cd $home
-for method in $methods; do
-    Rscript plot.R $root/$refpref $root/${stupref}_$method
-done
+Rscript plot.R $root/$refpref $root/$stupref
