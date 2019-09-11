@@ -25,5 +25,5 @@ plink --bfile ${stupref} --keep-allele-order --keep ${stupref}_$method$popu.fiid
 
 cd $home
 scriptargs="pca.slurm $root ${refpref}_$popu ${stupref}_$method$popu $n"
-jobname=EUR_oadpEUR_parts${n}
-bash submitjobs $scriptargs $jobname $n
+jobname=${popu}_${method}${popu}_parts${n}
+bash submitjobs "$scriptargs" $jobname $n
