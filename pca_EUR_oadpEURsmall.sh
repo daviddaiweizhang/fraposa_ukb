@@ -5,6 +5,7 @@ root=$1
 home=`pwd`
 refpref=kgn_EUR
 stupref=ukb_oadpEURsmall
+small_n=500
 
 cd $root
 
