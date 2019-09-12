@@ -6,8 +6,9 @@ refpref=kgn
 stupref=ukb
 panel=~/data/kgn/kgn_bial_childless.panel
 n=100
-method=oadp
+predict=oadp
 popu=EUR
+methods="ap sp oadp"
 home=`pwd`
 
 cd $root
@@ -20,10 +21,14 @@ cmp <( cut -d' ' -f2 ${refpref}_$popu.fam ) <( cut -d' ' -f2 $refpref.tmp )
 mv $refpref.tmp ${refpref}_$popu.fam
 
 # get the ukb samples predicted to be EUR
-cat ${stupref}_$method.pcs | cut -f1 | paste - ${stupref}.fam | awk -v popu=$popu '$1 == popu {print $2 " " $3}' > ${stupref}_$method$popu.fiid
-plink --bfile ${stupref} --keep-allele-order --keep ${stupref}_$method$popu.fiid --make-bed --out ${stupref}_$method$popu
+cat ${stupref}_$predict.pcs | cut -f1 | paste - ${stupref}.fam | awk -v popu=$popu '$1 == popu {print $2 " " $3}' > ${stupref}_$predict$popu.fiid
+plink --bfile ${stupref} --keep-allele-order --keep ${stupref}_$predict$popu.fiid --make-bed --out ${stupref}_$predict$popu
 
 cd $home
-scriptargs="pca.slurm $root ${refpref}_$popu ${stupref}_$method$popu $n"
-jobname=${popu}_${method}${popu}_parts${n}
-bash submitjobs "$scriptargs" $jobname $n
+bash submitjobs.sh "$scriptargs" $jobname $n
+
+for method in methods; do
+    scriptargs="pca.slurm $root ${refpref}_$popu ${stupref}_$predict$popu $method $n"
+    jobname=${popu}_${predict}${popu}_parts${n}_${method}
+    bash submitjobs.sh "$scriptargs" $jobname $n
+done
