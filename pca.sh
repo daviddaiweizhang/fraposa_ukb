@@ -27,6 +27,4 @@ for method in sp ap oadp adp; do
 done
 
 cd $home
-for method in sp ap oadp adp; do
-    Rscript plot.R $root/$refpref $root/${stupref}_$method
-done
+Rscript plot.R $root/$refpref $root/${stupref}
