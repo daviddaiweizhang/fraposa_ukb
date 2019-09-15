@@ -6,6 +6,7 @@ home=`pwd`
 refpref=kgn_nEUR
 stupref=ukb_small
 small_n=500
+seed=123
 
 cd $root
 
@@ -19,4 +20,4 @@ plink --bfile ukb --keep-allele-order --thin-indiv-count $small_n --seed $seed -
 cd $home
 
 # run pca
-bash pca_all.sh $root $refpref $stupref
+bash pca.sh $root $refpref $stupref
