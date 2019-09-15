@@ -6,8 +6,9 @@ refpref=kgn
 stupref=ukb
 panel=~/data/kgn/kgn_bial_childless.panel
 n=100
-method=oadp
+predict=oadp
 popu=EUR
+methods="ap sp oadp"
 home=`pwd`
 
 fraposa="python $HOME/fraposa/fraposa_runner.py"
@@ -25,8 +26,8 @@ cmp <( cut -d' ' -f2 ${refpref}_$popu.fam ) <( cut -d' ' -f2 $refpref.tmp )
 mv $refpref.tmp ${refpref}_$popu.fam
 
 # get the ukb samples predicted to be EUR
-cat ${stupref}_$method.pcs | cut -f1 | paste - ${stupref}.fam | awk -v popu=$popu '$1 == popu {print $2 " " $3}' > ${stupref}_$method$popu.fiid
-plink --bfile ${stupref} --keep-allele-order --keep ${stupref}_$method$popu.fiid --make-bed --out ${stupref}_$method$popu
+cat ${stupref}_$predict.pcs | cut -f1 | paste - ${stupref}.fam | awk -v popu=$popu '$1 == popu {print $2 " " $3}' > ${stupref}_$predict$popu.fiid
+plink --bfile ${stupref} --keep-allele-order --keep ${stupref}_$predict$popu.fiid --make-bed --out ${stupref}_$predict$popu
 
 # reference pca
 for method in $methods; do

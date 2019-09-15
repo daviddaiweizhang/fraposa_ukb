@@ -5,7 +5,10 @@ root=$1
 refpref=kgn
 inpref=ukb
 n=100
-scriptargs="pca.slurm $root $refpref $inpref $n"
-jobname=global_global_parts${n}
+methods="ap sp oadp"
 
-bash submitjobs.sh "$scriptargs" $jobname $n
+for method in methods; do
+    scriptargs="pca.slurm $root $refpref $inpref $method $n"
+    jobname=global_global_parts${n}_${method}
+    bash submitjobs.sh "$scriptargs" $jobname $n
+done
