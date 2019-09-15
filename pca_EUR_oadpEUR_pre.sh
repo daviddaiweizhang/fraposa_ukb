@@ -10,6 +10,11 @@ method=oadp
 popu=EUR
 home=`pwd`
 
+fraposa="python $HOME/fraposa/fraposa_runner.py"
+dim_ref=4
+dim_spikes=$dim_ref
+methods='sp ap oadp'
+
 cd $root
 
 # get EUR kgn samples
@@ -23,7 +28,14 @@ mv $refpref.tmp ${refpref}_$popu.fam
 cat ${stupref}_$method.pcs | cut -f1 | paste - ${stupref}.fam | awk -v popu=$popu '$1 == popu {print $2 " " $3}' > ${stupref}_$method$popu.fiid
 plink --bfile ${stupref} --keep-allele-order --keep ${stupref}_$method$popu.fiid --make-bed --out ${stupref}_$method$popu
 
+# reference pca
+for method in $methods; do
+    $fraposa --method $method --dim_ref $dim_ref --dim_spikes $dim_spikes ${refpref}_$popu
+done
+
 cd $home
+
+# study pca
 scriptargs="pca.slurm $root ${refpref}_$popu ${stupref}_$method$popu $n"
 jobname=${popu}_${method}${popu}_parts${n}
-bash submitjobs "$scriptargs" $jobname $n
+bash submitjobs.sh "$scriptargs" $jobname $n
