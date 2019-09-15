@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
 
+echo "$*"
 root=$1
 refpref=$2
 stupref=$3
@@ -16,7 +17,7 @@ cd $root
 
 # run pca
 for method in sp ap oadp; do
-    $fraposa --method $method --dim_ref $dim_ref --dim_spikes $dim_spikes --out ${stupref}_$method $refpref $stupref
+    $fraposa --method $method --dim_ref $dim_ref --dim_spikes $dim_spikes --out ${stupref}_$method --stu_filepref $stupref $refpref 
 done
 $trace $refpref $stupref $dim_stu $dim_ref ${stupref}_adp $refpref
 
