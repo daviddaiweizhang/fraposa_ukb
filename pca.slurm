@@ -26,7 +26,7 @@ stupref=${inpref}_parts$n/`printf "%04d\n" ${i}`
 mkdir -p `dirname $stupref`
 $splitindiv ${inpref} $n $i $stupref
 for method in $methods; do
-    $fraposa --method $method --dim_ref $dim_ref --dim_spikes $dim_spikes --out ${stupref}_$method $refpref $stupref
+    $fraposa --method $method --dim_ref $dim_ref --dim_spikes $dim_spikes --out ${stupref}_$method --stu_filepref $stupref $refpref 
 done
 
 date
