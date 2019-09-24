@@ -1,4 +1,6 @@
 rm(list=ls())
+set.seed(123)
+
 args = commandArgs(trailingOnly=TRUE)
 pref.ref = ifelse(length(args) >= 1, args[1], "data/kgn_EUR")
 pref.stu = ifelse(length(args) >= 2, args[2], "data/ukb_oadpEURsmall")
@@ -11,6 +13,9 @@ x.colnames = c("fid", "iid", pc.names)
 methods = c("sp", "ap", "oadp", "adp")
 x.ref = read.table(paste0(pref.ref, ".pcs"), header=T)
 colnames(x.ref) = x.colnames
+
+# load ref singular values
+s.ref = scan(paste0(pref.ref, "_s.dat"))
 
 # get population centers
 c.ref = aggregate(x.ref[,pc.names], by=list(x.ref$fid), FUN=mean)
@@ -46,21 +51,22 @@ out.filename = paste0(pref.ref, ".png")
 print(out.filename)
 png(out.filename, 2000, 1000)
 par(mfrow=c(1,2), cex=2)
-pc.sd = sapply(1:num.pcs, function(i) round(sd(x.ref[,pc.names[i]]), 2))
-pc.varsum = round(sum(pc.sd^2), 2)
+pc.contrib = round(s.ref[1:4]^2 / sum(s.ref^2), 3)
 main = "Reference samples"
-xlab = paste0("PC1 (sd=", pc.sd[1], ")")
-ylab = paste0("PC2 (sd=", pc.sd[2], ")")
+xlab = paste0("PC1 (contribution=", pc.contrib[1], ")")
+ylab = paste0("PC2 (contribution=", pc.contrib[2], ")")
 plot(x.ref$PC1, x.ref$PC2, xlab=xlab, ylab=ylab, col=x.ref$col, pch=x.ref$pch, main=main, xlim=PC1.lim, ylim=PC2.lim)
-main = paste0("(total variation = ", pc.varsum, ")")
-xlab = paste0("PC3 (sd=", pc.sd[3], ")")
-ylab = paste0("PC4 (sd=", pc.sd[4], ")")
+main = paste0("(variation contributed from PC1-4: ", sum(pc.contrib), ")")
+xlab = paste0("PC3 (contribution=", pc.contrib[3], ")")
+ylab = paste0("PC4 (contribution=", pc.contrib[4], ")")
 plot(x.ref$PC3, x.ref$PC4, xlab=xlab, ylab=ylab, col=x.ref$col, pch=x.ref$pch, main=main, xlim=PC3.lim, ylim=PC4.lim)
 legend("topright", legend=paste("Ref.", unique(x.ref$fid)), col=unique(x.ref$col), pch=unique(x.ref$pch))
 dev.off()
 
 msd.all = list()
+msd.nulldist.all = list()
 for(method in methods){
+    print(method)
 
     fun = function(fid){
         y = x.ref[x.ref$fid == fid,]
@@ -73,7 +79,7 @@ for(method in methods){
 
     nrep = 100
     msd.nulldist = sapply(1:nrep, function(x) mean(sapply(c.ref$fid, fun), na.rm=T))
-    print("msd null dist:")
+    msd.nulldist.all[[method]] = msd.nulldist
     print(paste("MSD null dist:", mean(msd.nulldist), sd(msd.nulldist)))
 
     c.stu = aggregate(x.stu[[method]][,pc.names], by = list(x.stu[[method]]$fid), FUN = mean)
@@ -92,10 +98,14 @@ for(method in methods){
     png(out.filename, 2000, 1000)
     par(mfrow=c(1,2), cex=2)
     main = paste0("Study samples (method: ", method, ")")
-    plot(x.stu[[method]]$PC1, x.stu[[method]]$PC2, xlab="PC1", ylab="PC2", col=x.stu[[method]]$col, pch=x.stu[[method]]$pch, main=main, xlim=PC1.lim, ylim=PC2.lim)
-    plot(x.stu[[method]]$PC3, x.stu[[method]]$PC4, xlab="PC3", ylab="PC4", col=x.stu[[method]]$col, pch=x.stu[[method]]$pch, main=main, xlim=PC3.lim, ylim=PC4.lim)
-    legend("topright", legend=paste("Stu.", unique(x.ref$fid)), col=unique(x.ref$col), pch=unique(x.ref$pch))
-    legend("bottomright", legend=paste("MSD:", msd.all[[method]]))
+    plot(x.ref$PC1, x.ref$PC2, xlab="PC1", ylab="PC2", col='grey', pch=x.ref$pch, main=main, xlim=PC1.lim, ylim=PC2.lim)
+    points(x.stu[[method]]$PC1, x.stu[[method]]$PC2, col=x.stu[[method]]$col, pch=x.stu[[method]]$pch) 
+    plot(x.ref$PC3, x.ref$PC4, xlab="PC3", ylab="PC4", col='grey', pch=x.ref$pch, main=main, xlim=PC3.lim, ylim=PC4.lim)
+    points(x.stu[[method]]$PC3, x.stu[[method]]$PC4, col=x.stu[[method]]$col, pch=x.stu[[method]]$pch) 
+    legend("topright", legend=paste("Ref.", unique(x.ref$fid)), col='grey', pch=unique(x.ref$pch))
+    legend("bottomright", legend=paste("Stu.", unique(x.ref$fid)), col=unique(x.ref$col), pch=unique(x.ref$pch))
+    legend("bottomleft", legend=paste("MSD:", msd.all[[method]]))
+    legend("bottom", legend=paste("null MSD", c("mean:", "sd:"), round(c(mean(msd.nulldist.all[[method]]), sd(msd.nulldist.all[[method]])), 3)))
 
     dev.off()
 }
