@@ -28,7 +28,7 @@ mv $refpref.tmp ${refpref}_$popu.fam
 cat ${stupref}_$predict.pcs | cut -f1 | paste - ${stupref}.fam | awk -v popu=$popu '$1 == popu {print $2 " " $3}' > ${stupref}_$predict$popu.fiid
 plink --bfile ${stupref} --keep-allele-order --keep ${stupref}_$predict$popu.fiid --make-bed --out ${stupref}_$predict$popu
 
-if [ "$popu" == EUR ]; then
+if [[ "$popu" =~ ^(EUR|AFR|SAS)$ ]]; then
     # reference pca
     for method in $methods; do
         $fraposa --method $method --dim_ref $dim_ref --dim_spikes $dim_spikes ${refpref}_$popu
