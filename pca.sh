@@ -28,4 +28,5 @@ for method in sp ap oadp adp; do
 done
 
 cd $home
+bash fst.sh $root/$refpref
 Rscript plot.R $root/$refpref $root/${stupref}
