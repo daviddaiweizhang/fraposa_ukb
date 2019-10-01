@@ -63,6 +63,7 @@ plot(x.ref$PC3, x.ref$PC4, xlab=xlab, ylab=ylab, col=x.ref$col, pch=x.ref$pch, m
 legend("topright", legend=paste("Ref.", unique(x.ref$fid)), col=unique(x.ref$col), pch=unique(x.ref$pch))
 dev.off()
 
+c.ref.scale = rowSums(as.matrix(c.ref[,c(center.names)])^2)
 msd.all = list()
 msd.nulldist.all = list()
 for(method in methods){
@@ -78,14 +79,14 @@ for(method in methods){
     }
 
     nrep = 100
-    msd.nulldist = sapply(1:nrep, function(x) mean(sapply(c.ref$fid, fun), na.rm=T))
+    msd.nulldist = sqrt(sapply(1:nrep, function(x) mean(sapply(c.ref$fid, fun) / c.ref.scale, na.rm=T)))
     msd.nulldist.all[[method]] = msd.nulldist
     print(paste("MSD null dist:", mean(msd.nulldist), sd(msd.nulldist)))
 
     c.stu = aggregate(x.stu[[method]][,pc.names], by = list(x.stu[[method]]$fid), FUN = mean)
     colnames(c.stu) = c("fid", center.names)
     c.refstu = merge(c.ref, c.stu, by="fid")
-    msd = mean(rowSums((c.refstu[,paste0(center.names, ".x")] - c.refstu[,paste0(center.names, ".y")])^2))
+    msd = sqrt(mean(rowSums((c.refstu[,paste0(center.names, ".x")] - c.refstu[,paste0(center.names, ".y")])^2) / c.ref.scale))
     msd = round(msd, 3)
     print(paste("MSD:", msd))
     msd.all[[method]] = msd
