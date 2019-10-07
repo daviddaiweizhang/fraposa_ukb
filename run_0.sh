@@ -7,4 +7,3 @@ mkdir -p $root
 
 bash intersect.sh $root
 bash pca_global_global_pre.sh $root
-bash pca_globalnEUR_globalsmall.sh $root $home
