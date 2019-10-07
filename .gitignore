@@ -1,4 +1,5 @@
 data
 logs
 tmp*
-old
+old*
+sync*
