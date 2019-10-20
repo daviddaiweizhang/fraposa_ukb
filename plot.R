@@ -11,7 +11,7 @@ pc.names = paste0("PC", 1:num.pcs)
 center.names = paste0("C", 1:num.pcs)
 x.colnames = c("fid", "iid", pc.names)
 methods = c("sp", "ap", "oadp", "adp")
-x.ref = read.table(paste0(pref.ref, ".pcs"), header=T)
+x.ref = read.table(paste0(pref.ref, ".pcs"), header=F)
 colnames(x.ref) = x.colnames
 
 # load ref singular values
@@ -49,18 +49,19 @@ PC4.lim = quantile(c(sapply(methods, function(method) x.stu[[method]]$PC4), x.re
 # plot ref pcs
 out.filename = paste0(pref.ref, ".png")
 print(out.filename)
-png(out.filename, 2000, 1000)
-par(mfrow=c(1,2), cex=2)
+png(out.filename, 1000, 2000)
+par(mfrow=c(2,1), cex=2, oma=c(0, 0, 2, 0))
 pc.contrib = round(s.ref[1:4]^2 / sum(s.ref^2), 3)
-main = "Reference samples"
 xlab = paste0("PC1 (contribution=", pc.contrib[1], ")")
 ylab = paste0("PC2 (contribution=", pc.contrib[2], ")")
-plot(x.ref$PC1, x.ref$PC2, xlab=xlab, ylab=ylab, col=x.ref$col, pch=x.ref$pch, main=main, xlim=PC1.lim, ylim=PC2.lim)
-main = paste0("(variation contributed from PC1-4: ", sum(pc.contrib), ")")
+main = paste0("Reference PC Scores (", nrow(x.ref), " 1000 Genomes samples)")
+plot(x.ref$PC1, x.ref$PC2, xlab=xlab, ylab=ylab, main=main, col=x.ref$col, pch=x.ref$pch, xlim=PC1.lim, ylim=PC2.lim)
 xlab = paste0("PC3 (contribution=", pc.contrib[3], ")")
 ylab = paste0("PC4 (contribution=", pc.contrib[4], ")")
-plot(x.ref$PC3, x.ref$PC4, xlab=xlab, ylab=ylab, col=x.ref$col, pch=x.ref$pch, main=main, xlim=PC3.lim, ylim=PC4.lim)
-legend("topright", legend=paste("Ref.", unique(x.ref$fid)), col=unique(x.ref$col), pch=unique(x.ref$pch))
+plot(x.ref$PC3, x.ref$PC4, xlab=xlab, ylab=ylab, col=x.ref$col, pch=x.ref$pch, xlim=PC3.lim, ylim=PC4.lim)
+legend("bottomright", legend=paste("Ref.", unique(x.ref$fid)), col=unique(x.ref$col), pch=unique(x.ref$pch))
+# supertitle = paste0("Reference PC Scores (", nrow(x.ref), " 1000 Genomes samples)")
+# mtext(supertitle, outer = TRUE, cex=3)
 dev.off()
 
 c.ref.scale = rowSums(as.matrix(c.ref[,c(center.names)])^2)
@@ -81,14 +82,14 @@ for(method in methods){
     nrep = 100
     msd.nulldist = sqrt(sapply(1:nrep, function(x) mean(sapply(c.ref$fid, fun) / c.ref.scale, na.rm=T)))
     msd.nulldist.all[[method]] = msd.nulldist
-    print(paste("MSD null dist:", mean(msd.nulldist), sd(msd.nulldist)))
+    print(paste("sqrtMSD null dist:", mean(msd.nulldist), sd(msd.nulldist)))
 
     c.stu = aggregate(x.stu[[method]][,pc.names], by = list(x.stu[[method]]$fid), FUN = mean)
     colnames(c.stu) = c("fid", center.names)
     c.refstu = merge(c.ref, c.stu, by="fid")
     msd = sqrt(mean(rowSums((c.refstu[,paste0(center.names, ".x")] - c.refstu[,paste0(center.names, ".y")])^2) / c.ref.scale))
     msd = round(msd, 3)
-    print(paste("MSD:", msd))
+    print(paste("sqrtMSD:", msd))
     msd.all[[method]] = msd
 }
 
@@ -96,26 +97,29 @@ for(method in methods){
 for(method in methods){
     out.filename = paste0(pref.stu, "_", method, ".png")
     print(out.filename)
-    png(out.filename, 2000, 1000)
-    par(mfrow=c(1,2), cex=2)
-    main = paste0("Study samples (method: ", method, ")")
-    plot(x.ref$PC1, x.ref$PC2, xlab="PC1", ylab="PC2", col='grey', pch=x.ref$pch, main=main, xlim=PC1.lim, ylim=PC2.lim)
+    png(out.filename, 1000, 2000)
+    par(mfrow=c(2,1), cex=2, oma=c(0, 0, 2, 0))
+    main = paste0(toupper(method), " Study PC Scores (", nrow(x.stu[[method]]), " UKBiobank samples)")
+    plot(x.ref$PC1, x.ref$PC2, xlab="PC1", ylab="PC2", main=main, col='grey', pch=x.ref$pch, xlim=PC1.lim, ylim=PC2.lim)
     points(x.stu[[method]]$PC1, x.stu[[method]]$PC2, col=x.stu[[method]]$col, pch=x.stu[[method]]$pch) 
-    plot(x.ref$PC3, x.ref$PC4, xlab="PC3", ylab="PC4", col='grey', pch=x.ref$pch, main=main, xlim=PC3.lim, ylim=PC4.lim)
+    legend("bottomright", legend=c(paste0("null sqrtMSD mean: ", round(mean(msd.nulldist.all[[method]]), 3)),
+                                   paste0("null sqrtMSD sd: ", round(sd(msd.nulldist.all[[method]]), 3)),
+                                   paste0("sqrtMSD: ", msd.all[[method]])
+                                   ))
+    plot(x.ref$PC3, x.ref$PC4, xlab="PC3", ylab="PC4", col='grey', pch=x.ref$pch, xlim=PC3.lim, ylim=PC4.lim)
     points(x.stu[[method]]$PC3, x.stu[[method]]$PC4, col=x.stu[[method]]$col, pch=x.stu[[method]]$pch) 
-    legend("topright", legend=paste("Ref.", unique(x.ref$fid)), col='grey', pch=unique(x.ref$pch))
-    legend("bottomright", legend=paste("Stu.", unique(x.ref$fid)), col=unique(x.ref$col), pch=unique(x.ref$pch))
-    legend("bottomleft", legend=paste("MSD:", msd.all[[method]]))
-    legend("bottom", legend=paste("null MSD", c("mean:", "sd:"), round(c(mean(msd.nulldist.all[[method]]), sd(msd.nulldist.all[[method]])), 3)))
-
+    legend("bottomright", legend=paste("Ref.", unique(x.ref$fid)), col='grey', pch=unique(x.ref$pch))
+    legend("bottomleft", legend=paste("Stu.", unique(x.ref$fid)), col=unique(x.ref$col), pch=unique(x.ref$pch))
+    # supertitle = paste0(toupper(method), " Study PC Scores (", nrow(x.stu[[method]]), " UKBiobank samples)")
+    # mtext(supertitle, outer = TRUE, cex=3)
     dev.off()
 }
 
 out.filename = paste0(pref.stu, "_scatter.png")
 print(out.filename)
-png(out.filename, 2000, 3000)
+png(out.filename, 1000, 2000)
 pairs = cbind(c(4,4,4,3,3,2), c(3,2,1,2,1,1))
-par(mfrow=c(nrow(pairs), num.pcs), cex=2)
+par(mfrow=c(nrow(pairs), num.pcs), cex=2, oma=c(0, 0, 2, 0))
 for(i in 1:nrow(pairs)){
     pair = pairs[i,]
     method = c(methods[pair[1]], methods[pair[2]])
@@ -127,7 +131,7 @@ for(i in 1:nrow(pairs)){
         b = x.stu[[method[2]]][[pc.name]]
         xlab = paste(method[1], pc.name)
         ylab = paste(method[2], pc.name)
-        main = paste("MSD:", msd)
+        main = paste("sqrtMSD:", msd)
         plot(a, b, xlab=xlab, ylab=ylab, main=main)
         abline(0,1)
         abline(v=0)
