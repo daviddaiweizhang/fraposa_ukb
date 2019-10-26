@@ -2,8 +2,8 @@ rm(list=ls())
 set.seed(123)
 
 args = commandArgs(trailingOnly=TRUE)
-pref.ref = ifelse(length(args) >= 1, args[1], "data/kgn_EUR")
-pref.stu = ifelse(length(args) >= 2, args[2], "data/ukb_oadpEURsmall")
+pref.ref = ifelse(length(args) >= 1, args[1], "data/kgn_nEUR")
+pref.stu = ifelse(length(args) >= 2, args[2], "data/ukb_small")
 
 # load ref samples
 num.pcs = 4
@@ -33,8 +33,10 @@ for(method in methods){
     if(file.exists(infile)){
         x.stu[[method]] = read.table(infile, header=F)
         colnames(x.stu[[method]]) = x.colnames
+        x.stu[[method]] = x.stu[[method]][order(x.stu[[method]]$iid),]
         x.stu[[method]]$fid = factor(x.stu[[method]]$fid, levels=levels(x.ref$fid))
         x.stu[[method]] = merge(x.stu[[method]], c.ref)
+        x.stu[[method]] = x.stu[[method]][order(x.stu[[method]]$iid),]
         x.stu[[method]]$col = as.integer(x.stu[[method]]$fid) + 1
         x.stu[[method]]$pch = as.integer(x.stu[[method]]$fid) + 1
     }
@@ -115,27 +117,47 @@ for(method in methods){
     dev.off()
 }
 
-out.filename = paste0(pref.stu, "_scatter.png")
-print(out.filename)
-png(out.filename, 1000, 2000)
-pairs = cbind(c(4,4,4,3,3,2), c(3,2,1,2,1,1))
-par(mfrow=c(nrow(pairs), num.pcs), cex=2, oma=c(0, 0, 2, 0))
-for(i in 1:nrow(pairs)){
-    pair = pairs[i,]
-    method = c(methods[pair[1]], methods[pair[2]])
-    msd = mean(as.matrix(x.stu[[method[1]]][, pc.names] - x.stu[[method[2]]][, pc.names])^2)
-    msd = round(msd, 3)
-    print(paste(method[1], method[2], msd))
-    for(pc.name in pc.names){
-        a = x.stu[[method[1]]][[pc.name]]
-        b = x.stu[[method[2]]][[pc.name]]
-        xlab = paste(method[1], pc.name)
-        ylab = paste(method[2], pc.name)
-        main = paste("sqrtMSD:", msd)
-        plot(a, b, xlab=xlab, ylab=ylab, main=main)
-        abline(0,1)
-        abline(v=0)
-        abline(h=0)
+# scatter plot study pcs
+pairs_all = list()
+pairs_all[[1]] = cbind(
+    c(4,4,4),
+    c(3,2,1))
+pairs_all[[2]] = cbind(
+    c(3,3,2),
+    c(2,1,1))
+for(l in 1:2){
+    pairs = pairs_all[[l]]
+    out.filename = paste0(pref.stu, "_scatter_", l, ".png")
+    print(out.filename)
+    png(out.filename, 3000, 4000)
+    par(mfcol=c(num.pcs, nrow(pairs)), cex=3, oma=c(4,0,0,0))
+    for(i in 1:nrow(pairs)){
+        pair = pairs[i,]
+        method = c(methods[pair[1]], methods[pair[2]])
+        msd = sqrt(mean(as.matrix(x.stu[[method[1]]][, pc.names] - x.stu[[method[2]]][, pc.names])^2))
+        msd = round(msd, 3)
+        print(paste(method[1], method[2], msd))
+        for(j in 1:num.pcs){
+            pc.name = pc.names[j]
+            a = x.stu[[method[1]]][[pc.name]]
+            b = x.stu[[method[2]]][[pc.name]]
+            ab = sapply(methods, function(m) x.stu[[m]][[pc.name]])
+            lim = c(min(ab), max(ab))
+            xlab = paste(toupper(method[1]), pc.name)
+            ylab = paste(toupper(method[2]), pc.name)
+            col = x.stu[[method[1]]]$col
+            pch = x.stu[[method[1]]]$pch
+            main = ""
+            if(j == 1) main = paste(toupper(method[1]), " vs ", toupper(method[2]), " (sqrtMSD: ", msd, ")")
+            plot(a, b, xlab=xlab, ylab=ylab, xlim=lim, ylim=lim, col=col, pch=pch, main=main)
+            abline(0,1)
+            abline(v=0)
+            abline(h=0)
+        }
     }
+    legend.x = -240
+    legend.y = -130
+    legend(legend.x, legend.y, xpd="NA", legend=unique(x.ref$fid), col=unique(x.ref$col), pch=unique(x.ref$pch), ncol=length(unique(x.ref$fid)))
+    dev.off()
 }
-dev.off()
+
