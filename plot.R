@@ -2,8 +2,8 @@ rm(list=ls())
 set.seed(123)
 
 args = commandArgs(trailingOnly=TRUE)
-pref.ref = ifelse(length(args) >= 1, args[1], "data/kgn_EUR")
-pref.stu = ifelse(length(args) >= 2, args[2], "data/ukb_oadpEURsmall")
+pref.ref = ifelse(length(args) >= 1, args[1], "data/kgn")
+pref.stu = ifelse(length(args) >= 2, args[2], "data/ukb")
 
 # load ref samples
 num.pcs = 4
@@ -11,14 +11,19 @@ pc.names = paste0("PC", 1:num.pcs)
 center.names = paste0("C", 1:num.pcs)
 x.colnames = c("fid", "iid", pc.names)
 methods = c("sp", "ap", "oadp", "adp")
+
+# load ref pc scores
 x.ref = read.table(paste0(pref.ref, ".pcs"), header=F)
 colnames(x.ref) = x.colnames
+
+# add mix popu to ref
+x.ref$fid = factor(x.ref$fid, levels=c(levels(x.ref$fid), "mix"))
 
 # load ref singular values
 s.ref = scan(paste0(pref.ref, "_s.dat"))
 
 # get population centers
-c.ref = aggregate(x.ref[,pc.names], by=list(x.ref$fid), FUN=mean)
+c.ref = aggregate(x.ref[,pc.names], by=list(x.ref$fid), FUN=mean, drop=F)
 colnames(c.ref) = c("fid", center.names)
 x.ref = merge(x.ref, c.ref)
 
@@ -87,7 +92,7 @@ for(method in methods){
     c.stu = aggregate(x.stu[[method]][,pc.names], by = list(x.stu[[method]]$fid), FUN = mean)
     colnames(c.stu) = c("fid", center.names)
     c.refstu = merge(c.ref, c.stu, by="fid")
-    msd = sqrt(mean(rowSums((c.refstu[,paste0(center.names, ".x")] - c.refstu[,paste0(center.names, ".y")])^2) / c.ref.scale))
+    msd = sqrt(mean(rowSums((c.refstu[,paste0(center.names, ".x")] - c.refstu[,paste0(center.names, ".y")])^2) / c.ref.scale, na.rm=T))
     msd = round(msd, 3)
     print(paste("sqrtMSD:", msd))
     msd.all[[method]] = msd
@@ -100,14 +105,17 @@ for(method in methods){
     png(out.filename, 1000, 2000)
     par(mfrow=c(2,1), cex=2, oma=c(0, 0, 2, 0))
     main = paste0(toupper(method), " Study PC Scores (", nrow(x.stu[[method]]), " UKBiobank samples)")
+    stu.is.eur = x.stu[[method]]$fid == "EUR"
     plot(x.ref$PC1, x.ref$PC2, xlab="PC1", ylab="PC2", main=main, col='grey', pch=x.ref$pch, xlim=PC1.lim, ylim=PC2.lim)
-    points(x.stu[[method]]$PC1, x.stu[[method]]$PC2, col=x.stu[[method]]$col, pch=x.stu[[method]]$pch) 
+    points(x.stu[[method]]$PC1[stu.is.eur], x.stu[[method]]$PC2[stu.is.eur], col=x.stu[[method]]$col[stu.is.eur], pch=x.stu[[method]]$pch[stu.is.eur]) 
+    points(x.stu[[method]]$PC1[!stu.is.eur], x.stu[[method]]$PC2[!stu.is.eur], col=x.stu[[method]]$col[!stu.is.eur], pch=x.stu[[method]]$pch[!stu.is.eur]) 
     legend("bottomright", legend=c(paste0("null sqrtMSD mean: ", round(mean(msd.nulldist.all[[method]]), 3)),
                                    paste0("null sqrtMSD sd: ", round(sd(msd.nulldist.all[[method]]), 3)),
                                    paste0("sqrtMSD: ", msd.all[[method]])
                                    ))
     plot(x.ref$PC3, x.ref$PC4, xlab="PC3", ylab="PC4", col='grey', pch=x.ref$pch, xlim=PC3.lim, ylim=PC4.lim)
-    points(x.stu[[method]]$PC3, x.stu[[method]]$PC4, col=x.stu[[method]]$col, pch=x.stu[[method]]$pch) 
+    points(x.stu[[method]]$PC3[stu.is.eur], x.stu[[method]]$PC4[stu.is.eur], col=x.stu[[method]]$col[stu.is.eur], pch=x.stu[[method]]$pch[stu.is.eur]) 
+    points(x.stu[[method]]$PC3[!stu.is.eur], x.stu[[method]]$PC4[!stu.is.eur], col=x.stu[[method]]$col[!stu.is.eur], pch=x.stu[[method]]$pch[!stu.is.eur]) 
     legend("bottomright", legend=paste("Ref.", unique(x.ref$fid)), col='grey', pch=unique(x.ref$pch))
     legend("bottomleft", legend=paste("Stu.", unique(x.ref$fid)), col=unique(x.ref$col), pch=unique(x.ref$pch))
     # supertitle = paste0(toupper(method), " Study PC Scores (", nrow(x.stu[[method]]), " UKBiobank samples)")
@@ -115,27 +123,29 @@ for(method in methods){
     dev.off()
 }
 
-out.filename = paste0(pref.stu, "_scatter.png")
-print(out.filename)
-png(out.filename, 1000, 2000)
-pairs = cbind(c(4,4,4,3,3,2), c(3,2,1,2,1,1))
-par(mfrow=c(nrow(pairs), num.pcs), cex=2, oma=c(0, 0, 2, 0))
-for(i in 1:nrow(pairs)){
-    pair = pairs[i,]
-    method = c(methods[pair[1]], methods[pair[2]])
-    msd = mean(as.matrix(x.stu[[method[1]]][, pc.names] - x.stu[[method[2]]][, pc.names])^2)
-    msd = round(msd, 3)
-    print(paste(method[1], method[2], msd))
-    for(pc.name in pc.names){
-        a = x.stu[[method[1]]][[pc.name]]
-        b = x.stu[[method[2]]][[pc.name]]
-        xlab = paste(method[1], pc.name)
-        ylab = paste(method[2], pc.name)
-        main = paste("sqrtMSD:", msd)
-        plot(a, b, xlab=xlab, ylab=ylab, main=main)
-        abline(0,1)
-        abline(v=0)
-        abline(h=0)
+if("adp" %in% methods){
+    out.filename = paste0(pref.stu, "_scatter.png")
+    print(out.filename)
+    png(out.filename, 1000, 2000)
+    pairs = cbind(c(4,4,4,3,3,2), c(3,2,1,2,1,1))
+    par(mfrow=c(nrow(pairs), num.pcs), cex=2, oma=c(0, 0, 2, 0))
+    for(i in 1:nrow(pairs)){
+        pair = pairs[i,]
+        method = c(methods[pair[1]], methods[pair[2]])
+        msd = mean(as.matrix(x.stu[[method[1]]][, pc.names] - x.stu[[method[2]]][, pc.names])^2)
+        msd = round(msd, 3)
+        print(paste(method[1], method[2], msd))
+        for(pc.name in pc.names){
+            a = x.stu[[method[1]]][[pc.name]]
+            b = x.stu[[method[2]]][[pc.name]]
+            xlab = paste(method[1], pc.name)
+            ylab = paste(method[2], pc.name)
+            main = paste("sqrtMSD:", msd)
+            plot(a, b, xlab=xlab, ylab=ylab, main=main)
+            abline(0,1)
+            abline(v=0)
+            abline(h=0)
+        }
     }
+    dev.off()
 }
-dev.off()
