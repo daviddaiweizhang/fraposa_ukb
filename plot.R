@@ -17,7 +17,9 @@ x.ref = read.table(paste0(pref.ref, ".pcs"), header=F)
 colnames(x.ref) = x.colnames
 
 # add mix popu to ref
-if(pref.ref == "data/kgn") x.ref$fid = factor(x.ref$fid, levels=c(levels(x.ref$fid), "mix"))
+if(pref.stu %in% c("data/ukb", "data/ukb_small")){
+    x.ref$fid = factor(x.ref$fid, levels=c(levels(x.ref$fid), "mix"))
+}
 
 # load ref singular values
 s.ref = scan(paste0(pref.ref, "_s.dat"))
@@ -47,6 +49,7 @@ for(method in methods){
     }
 }
 methods = names(x.stu)
+stopifnot(length(unique(sapply(x.stu, nrow))) == 1)
 
 PC1.lim = quantile(c(sapply(methods, function(method) x.stu[[method]]$PC1), x.ref$PC1), c(0,1))
 PC2.lim = quantile(c(sapply(methods, function(method) x.stu[[method]]$PC2), x.ref$PC2), c(0,1))
