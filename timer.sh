@@ -1,13 +1,25 @@
 #!/bin/bash
 set -e
 
-n=$1
+root=$1
+refpref=$2
+stupref=$3
 
-nstu=50
-K=8
-k=2
-pref=data/n${n}s${nstu}/a
-# time -p bash fraposa.sh ${pref}_ref ${pref}_stu oadp ${pref}_oadp
-time -p bash fraposa.sh ${pref}_ref ${pref}_stu ap ${pref}_ap
-time -p bash fraposa.sh ${pref}_ref ${pref}_stu sp ${pref}_sp
-# time -p bash trace.sh ${pref}_ref ${pref}_stu $K $k ${pref}_adp ${pref}_ref
+fraposa="python $HOME/fraposa/fraposa_runner.py"
+trace="bash $HOME/fraposa_simulation/trace.sh"
+dim_ref=4
+let "dim_stu = 2 * $dim_ref"
+dim_spikes=$dim_ref
+methods='sp ap oadp'
+
+id=`date +%s.%N`
+base=$root/runtimes/$id
+mkdir -p $base
+cp $root/$refpref.{bed,bim,fam} $base
+cp $root/$stupref.{bed,bim,fam} $base
+
+for method in $methods; do
+    rm -f $base/*.dat
+    $fraposa --method $method --dim_ref $dim_ref --dim_spikes $dim_spikes --out $base/${stupref}_$method --stu_filepref $base/$stupref $base/$refpref 
+done
+$trace $base/$refpref $base/$stupref $dim_stu $dim_ref $base/${stupref}_adp $base/$refpref

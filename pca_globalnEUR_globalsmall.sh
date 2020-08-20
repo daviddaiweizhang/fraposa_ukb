@@ -6,6 +6,7 @@ home=`pwd`
 refpref=kgn_nEUR
 stupref=ukb_small
 small_n=5000
+smaller_n=500
 seed=123
 
 cd $root
@@ -16,6 +17,7 @@ plink --bfile kgn --keep-allele-order --thin-indiv-count $n_EUR --seed $seed --m
 
 # get a small subset of ukb samples
 plink --bfile ukb --keep-allele-order --thin-indiv-count $small_n --seed $seed --make-bed --out $stupref
+plink --bfile ukb --keep-allele-order --thin-indiv-count $smaller_n --seed $seed --make-bed --out ${stupref}er
 
 cd $home
 

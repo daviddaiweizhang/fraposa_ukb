@@ -14,9 +14,12 @@ methods='sp ap oadp'
 
 # reference pca
 for method in $methods; do
-    $fraposa --method $method --dim_ref $dim_ref --dim_spikes $dim_spikes $root/$refpref
+    base=${refpref}_$method
+    mkdir -p $root/$base
+    rm -f $root/$base/*.dat
+    cp $root/$refpref.{bed,bim,fam} $root/$base
+    $fraposa --method $method --dim_ref $dim_ref --dim_spikes $dim_spikes $root/$base/$refpref
+    scriptargs="pca.slurm $root $base/$refpref $inpref $method $n"
+    jobname=global_global_${method}_parts${n}
+    bash submitjobs.sh "$scriptargs" $jobname $n
 done
-
-scriptargs="pca.slurm $root $refpref $inpref $n"
-jobname=global_global_parts${n}
-bash submitjobs.sh "$scriptargs" $jobname $n

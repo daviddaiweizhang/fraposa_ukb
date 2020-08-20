@@ -1,8 +1,8 @@
 #!/bin/bash
 
-#SBATCH --job-name=global_globalsmall
-#SBATCH --array=0-19
-#SBATCH --time=12:00:00
+#SBATCH --job-name=kgn_small
+#SBATCH --array=1-1
+#SBATCH --time=24:00:00
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=8g
 
@@ -25,6 +25,9 @@ date
 
 root=data
 home=`pwd`
+# bash timer.sh data kgn ukb_smaller
+# bash timer.sh data kgn_nEUR ukb_small
+# bash timer.sh data kgn_EUR ukb_oadpEURsmall
 # bash pca_globalnEUR_globalsmall.sh $root $home
 # bash pca_EUR_oadpEURsmall.sh $root $home
 bash pca_global_globalsmall.sh $root
