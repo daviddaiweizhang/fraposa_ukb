@@ -17,7 +17,9 @@ x.ref = read.table(paste0(pref.ref, ".pcs"), header=F)
 colnames(x.ref) = x.colnames
 
 # add mix popu to ref
-x.ref$fid = factor(x.ref$fid, levels=c(levels(x.ref$fid), "mix"))
+if(pref.stu %in% c("data/ukb", "data/ukb_small")){
+    x.ref$fid = factor(x.ref$fid, levels=c(levels(x.ref$fid), "mix"))
+}
 
 # load ref singular values
 s.ref = scan(paste0(pref.ref, "_s.dat"))
@@ -47,6 +49,7 @@ for(method in methods){
     }
 }
 methods = names(x.stu)
+stopifnot(length(unique(sapply(x.stu, nrow))) == 1)
 
 PC1.lim = quantile(c(sapply(methods, function(method) x.stu[[method]]$PC1), x.ref$PC1), c(0,1))
 PC2.lim = quantile(c(sapply(methods, function(method) x.stu[[method]]$PC2), x.ref$PC2), c(0,1))
@@ -66,7 +69,9 @@ plot(x.ref$PC1, x.ref$PC2, xlab=xlab, ylab=ylab, main=main, col=x.ref$col, pch=x
 xlab = paste0("PC3 (contribution=", pc.contrib[3], ")")
 ylab = paste0("PC4 (contribution=", pc.contrib[4], ")")
 plot(x.ref$PC3, x.ref$PC4, xlab=xlab, ylab=ylab, col=x.ref$col, pch=x.ref$pch, xlim=PC3.lim, ylim=PC4.lim)
-legend("bottomright", legend=paste("Ref.", unique(x.ref$fid)), col=unique(x.ref$col), pch=unique(x.ref$pch))
+x.ref.legend = unique(x.ref[,c("fid", "col", "pch")])
+x.ref.legend = x.ref.legend[order(x.ref.legend$fid),]
+legend("bottomright", legend=paste("Ref.", x.ref.legend$fid), col=x.ref.legend$col, pch=x.ref.legend$pch)
 # supertitle = paste0("Reference PC Scores (", nrow(x.ref), " 1000 Genomes samples)")
 # mtext(supertitle, outer = TRUE, cex=3)
 dev.off()
@@ -118,8 +123,10 @@ for(method in methods){
     plot(x.ref$PC3, x.ref$PC4, xlab="PC3", ylab="PC4", col='grey', pch=x.ref$pch, xlim=PC3.lim, ylim=PC4.lim)
     points(x.stu[[method]]$PC3[stu.is.eur], x.stu[[method]]$PC4[stu.is.eur], col=x.stu[[method]]$col[stu.is.eur], pch=x.stu[[method]]$pch[stu.is.eur]) 
     points(x.stu[[method]]$PC3[!stu.is.eur], x.stu[[method]]$PC4[!stu.is.eur], col=x.stu[[method]]$col[!stu.is.eur], pch=x.stu[[method]]$pch[!stu.is.eur]) 
-    legend("bottomright", legend=paste("Ref.", unique(x.ref$fid)), col='grey', pch=unique(x.ref$pch))
-    legend("bottomleft", legend=paste("Stu.", unique(x.ref$fid)), col=unique(x.ref$col), pch=unique(x.ref$pch))
+    legend("bottomright", legend=paste("Ref.", x.ref.legend$fid), col='grey', pch=x.ref.legend$pch)
+    x.stu.legend = unique(x.stu[[method]][,c("fid", "col", "pch")])
+    x.stu.legend = x.stu.legend[order(x.stu.legend$fid),]
+    legend("bottomleft", legend=paste("Stu.", x.stu.legend$fid), col=x.stu.legend$col, pch=x.stu.legend$pch)
     # supertitle = paste0(toupper(method), " Study PC Scores (", nrow(x.stu[[method]]), " UKBiobank samples)")
     # mtext(supertitle, outer = TRUE, cex=3)
     dev.off()
@@ -154,18 +161,19 @@ if("adp" %in% methods){
                 lim = c(min(ab), max(ab))
                 xlab = paste(toupper(method[1]), pc.name)
                 ylab = paste(toupper(method[2]), pc.name)
-            col = x.stu[[method[1]]]$col
-            pch = x.stu[[method[1]]]$pch
-            main = ""
-            if(j == 1) main = paste(toupper(method[1]), " vs ", toupper(method[2]), " (sqrtMSD: ", msd, ")")
-            plot(a, b, xlab=xlab, ylab=ylab, xlim=lim, ylim=lim, col=col, pch=pch, main=main)
-            abline(0,1)
-            abline(v=0)
-            abline(h=0)
+                col = x.stu[[method[1]]]$col
+                pch = x.stu[[method[1]]]$pch
+                main = ""
+                if(j == 1) main = paste(toupper(method[1]), " vs ", toupper(method[2]), " (sqrtMSD: ", msd, ")")
+                plot(a, b, xlab=xlab, ylab=ylab, xlim=lim, ylim=lim, col=col, pch=pch, main=main)
+                abline(0,1)
+                abline(v=0)
+                abline(h=0)
+            }
         }
+        legend.x = -240
+        legend.y = -130
+        legend(legend.x, legend.y, xpd="NA", legend=unique(x.ref$fid), col=unique(x.ref$col), pch=unique(x.ref$pch), ncol=length(unique(x.ref$fid)))
+        dev.off()
     }
-    legend.x = -240
-    legend.y = -130
-    legend(legend.x, legend.y, xpd="NA", legend=unique(x.ref$fid), col=unique(x.ref$col), pch=unique(x.ref$pch), ncol=length(unique(x.ref$fid)))
-    dev.off()
 }

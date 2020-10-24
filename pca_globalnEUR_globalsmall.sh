@@ -21,3 +21,4 @@ cd $home
 
 # run pca
 bash pca.sh $root $refpref $stupref
+bash pca_post.sh $root $refpref $stupref
