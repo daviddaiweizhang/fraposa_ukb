@@ -5,6 +5,7 @@ echo "$*"
 root=$1
 refpref=$2
 stupref=$3
+mix=$4
 home=`pwd`
 seed=123
 fraposa="python $HOME/fraposa/fraposa_runner.py"
@@ -23,7 +24,12 @@ $trace $refpref $stupref $dim_stu $dim_ref ${stupref}_adp $refpref
 
 for method in sp ap oadp adp; do
     $predpopu $refpref ${stupref}_$method
-    paste <( cut -f1 ${stupref}_$method.popu ) <( cut -f2- ${stupref}_$method.pcs ) > tmp
+    if [[ "$mix" == "1" ]]; then
+        awk '{ if ( $2 > 0.875 ) {print $1} else {print "mix"} }' ${stupref}_$method.popu > tmp_popu_$method
+    else
+        cut -f1 ${stupref}_$method.popu > tmp_popu_$method 
+    fi
+    paste <( cat tmp_popu_$method ) <( cut -f2- ${stupref}_$method.pcs ) > tmp
     mv tmp ${stupref}_$method.pcs
 done
 
